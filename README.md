@@ -1,1 +1,1 @@
-"# daytrade" 
+# STONKS
