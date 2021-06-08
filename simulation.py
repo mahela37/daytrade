@@ -12,13 +12,17 @@ class Simulation():
     prices=[]
     params=None
     file=None
+    load_mode=None
+    price_index=0
 
-    def __init__(self,file,params):
+    def __init__(self,file,params,load_mode):
         self.file=file
-        self.load_prices()
+        if(load_mode=="backtest"):
+            self.load_prices()
         self.params=params
         self.balance=self.params['starting_value']
-
+        self.load_mode=load_mode
+        
     def load_prices(self):
         # read data from file
         with open (f"data_include/{self.file}","r") as f:
@@ -36,6 +40,13 @@ class Simulation():
             i=i+1
         self.prices=prices_raw
 
+    def fetch_latest_price(self):
+        if self.load_mode=="backtest":
+            if(self.price_index>=len(self.prices)):
+                return "EOF"
+            self.price_index=self.price_index+1
+            return self.prices[self.price_index-1]
+            
     def buy(self,price):
         if(self.balance-(price*self.params['num_shares'])-self.transaction_fee)>0:
             self.balance=self.balance-(price*self.params['num_shares'])-self.transaction_fee
@@ -62,11 +73,12 @@ class Simulation():
     # run the simulation once
     def run(self):
         current=None
-        market_open=self.prices[0]
-        last_price=self.prices[0]
+        market_open=self.fetch_latest_price()
+        price=market_open
+        last_price=market_open
 
         trade_history=[]
-        for i,price in enumerate(self.prices):
+        while(price is not "EOF"):
             last_price=price
             traded=False
             current_trade={}
@@ -75,12 +87,12 @@ class Simulation():
                     self.sell(price)
                     traded=True
                     current_trade['type']="sell"
-                    current_trade['timestamp']=self.get_timestamp(i)+f' {self.file}'
+                    current_trade['timestamp']=self.get_timestamp(self.price_index)+f' {self.file}'
                     current_trade['price']=price
                     current=price
             else:
                 if current is None: #market open
-                    if(market_open/price-1>=self.params['min_drop_opening_purchase'] and i>=self.params['min_minutes_before_first_buy']):
+                    if(market_open/price-1>=self.params['min_drop_opening_purchase'] and self.price_index>=self.params['min_minutes_before_first_buy']):
                         bought=self.buy(price)
                         if not bought:
                             custom_print("Went bankrupt...exiting simulation\n",0)
@@ -88,7 +100,7 @@ class Simulation():
                         current=price
                         traded=True
                         current_trade['type']="buy"
-                        current_trade['timestamp']=self.get_timestamp(i)+f' {self.file}'
+                        current_trade['timestamp']=self.get_timestamp(self.price_index)+f' {self.file}'
                         current_trade['price']=price                                          
                 else:
                     if(current/price-1<=self.params['min_decay']):
@@ -99,10 +111,11 @@ class Simulation():
                         current=price
                         traded=True
                         current_trade['type']="buy"
-                        current_trade['timestamp']=self.get_timestamp(i)+f' {self.file}'
+                        current_trade['timestamp']=self.get_timestamp(self.price_index)+f' {self.file}'
                         current_trade['price']=price
             if traded:
                 trade_history.append(current_trade)
+            price=self.fetch_latest_price()
 
         if(self.has_stock):
             custom_print("\nMarket is closing...selling the remaining shares\n",0)

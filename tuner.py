@@ -42,7 +42,7 @@ class Tuner():
     def run_dataset(self,instance_params):
         results=[]
         for file in self.files:
-            simulation=Simulation(file,instance_params)
+            simulation=Simulation(file,instance_params,"backtest")
             simulation_results=simulation.run()
             return_yield=simulation_results['return_yield']
             trade_history=simulation_results['trade_history']
