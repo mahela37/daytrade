@@ -1,4 +1,4 @@
-import json,datetime
+import json,datetime,requests,time
 from custom_print import custom_print
 
 MARKET_OPEN_SECONDS=60*60*6+60*30   # 6:30 AM in seconds
@@ -14,11 +14,21 @@ class Simulation():
     file=None
     load_mode=None
     price_index=0
+    live_url=None
 
     def __init__(self,file,params,load_mode):
         self.file=file
         if(load_mode=="backtest"):
+            custom_print("Running in backtest mode",0)
             self.load_prices()
+        elif load_mode=="live":
+            custom_print("Running in live mode",0)
+            self.live_url=f"https://query1.finance.yahoo.com/v8/finance/chart/{self.file}?region=CA&lang=en-CA&includePrePost=false&interval=1m&useYfid=true&range=1m&corsDomain=ca.finance.yahoo.com&.tsrc=finance"
+        elif load_mode=="live_test":
+            self.live_url=f'http://127.0.0.1:5000/price'
+        else:
+            raise ValueError('Simulation: Unspecified load mode')
+
         self.params=params
         self.balance=self.params['starting_value']
         self.load_mode=load_mode
@@ -40,12 +50,28 @@ class Simulation():
             i=i+1
         self.prices=prices_raw
 
+
     def fetch_latest_price(self):
         if self.load_mode=="backtest":
             if(self.price_index>=len(self.prices)):
                 return "EOF"
             self.price_index=self.price_index+1
             return self.prices[self.price_index-1]
+        else:
+            r=requests.get(self.live_url)
+            r_json=r.json()
+            current_price=r_json['chart']['result'][0]['indicators']['quote'][0]['open'][0]
+            timestamp=r_json['chart']['result'][0]['timestamp'][0]
+            date_timestamp=datetime.datetime.fromtimestamp(timestamp)
+            if(date_timestamp.hour>=12 and date_timestamp.minute==59):
+                return "EOF"
+            self.price_index=self.price_index+1
+            if(self.load_mode=="live"):
+                time.sleep(SAMPLING_RATE_SECONDS)
+            else:
+                pass
+                #time.sleep(0.5)
+            return current_price
             
     def buy(self,price):
         if(self.balance-(price*self.params['num_shares'])-self.transaction_fee)>0:
@@ -72,6 +98,7 @@ class Simulation():
 
     # run the simulation once
     def run(self):
+        print(self.params)
         current=None
         market_open=self.fetch_latest_price()
         price=market_open
