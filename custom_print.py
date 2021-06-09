@@ -1,4 +1,4 @@
-MIN_PRINT_LEVEL=1
+MIN_PRINT_LEVEL=0
 
 # reduce clutter by defining print levels
 def custom_print(data,level):

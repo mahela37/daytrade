@@ -60,8 +60,8 @@ class Simulation():
         else:
             r=requests.get(self.live_url)
             r_json=r.json()
-            current_price=r_json['chart']['result'][0]['indicators']['quote'][0]['open'][0]
-            timestamp=r_json['chart']['result'][0]['timestamp'][0]
+            current_price=r_json['chart']['result'][0]['meta']['regularMarketPrice']
+            timestamp=r_json['chart']['result'][0]['meta']['regularMarketTime']
             date_timestamp=datetime.datetime.fromtimestamp(timestamp)
             if(date_timestamp.hour>=12 and date_timestamp.minute==59):
                 return "EOF"
@@ -98,7 +98,6 @@ class Simulation():
 
     # run the simulation once
     def run(self):
-        print(self.params)
         current=None
         market_open=self.fetch_latest_price()
         price=market_open
@@ -106,6 +105,7 @@ class Simulation():
 
         trade_history=[]
         while(price is not "EOF"):
+            custom_print(f"Current price is {price} at {self.get_timestamp(self.price_index)}",0)
             last_price=price
             traded=False
             current_trade={}
@@ -143,6 +143,7 @@ class Simulation():
             if traded:
                 trade_history.append(current_trade)
             price=self.fetch_latest_price()
+        custom_print("End Of Data reached",0)
 
         if(self.has_stock):
             custom_print("\nMarket is closing...selling the remaining shares\n",0)
