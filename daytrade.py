@@ -6,12 +6,12 @@ from tuner import Tuner
 
 params_simulation={
     "min_growth":{"start":0.03,"end":0.03,"step":0.01},
-    "min_decay":{"start":-0.02,"end":-0.02,"step":0.01},
-    "starting_value":{"start":4000,"end":4000,"step":1000},
-    "num_shares":{"start":70,"end":70,"step":10},
+    "min_decay":{"start":-0.04,"end":-0.04,"step":0.01},
+    "starting_value":{"start":3000,"end":3000,"step":1000},
+    "num_shares":{"start":50,"end":50,"step":5},
     "stop_loss":{"start":-0.4,"end":-0.4,"step":0.03},
     "min_drop_opening_purchase":{"start":0,"end":0,"step":0.05},
-    "min_minutes_before_first_buy":{"start":25,"end":35,"step":5}
+    "min_minutes_before_first_sell":{"start":20,"end":20,"step":5}
 }
 
 tuner=Tuner(params_simulation)

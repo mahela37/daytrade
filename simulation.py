@@ -110,7 +110,7 @@ class Simulation():
             traded=False
             current_trade={}
             if self.has_stock:
-                if(price/current-1>=self.params['min_growth'] or (price/current-1<=self.params['stop_loss'])):
+                if((price/current-1>=self.params['min_growth'] or (price/current-1<=self.params['stop_loss']))and self.price_index>=self.params['min_minutes_before_first_sell']):
                     self.sell(price)
                     traded=True
                     current_trade['type']="sell"
@@ -119,7 +119,7 @@ class Simulation():
                     current=price
             else:
                 if current is None: #market open
-                    if(market_open/price-1>=self.params['min_drop_opening_purchase'] and self.price_index>=self.params['min_minutes_before_first_buy']):
+                    if(market_open/price-1>=self.params['min_drop_opening_purchase'] ):
                         bought=self.buy(price)
                         if not bought:
                             custom_print("Went bankrupt...exiting simulation\n",0)

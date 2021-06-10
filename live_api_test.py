@@ -32,7 +32,7 @@ def hello_world():
     global prices
     global counter
     global seconds
-    return_data={'chart':{"result":[{"timestamp":[seconds],"indicators":{"quote":[{"open":[prices[counter]]}]}}]}}
+    return_data={'chart':{"result":[{"meta":{"regularMarketPrice":prices[counter],"regularMarketTime":seconds}}]}}
     seconds=seconds+60
     counter=counter+1
     return json.dumps(return_data)
